@@ -1,0 +1,21 @@
+{% extends 'agency/base.html' %}
+{% load static %}
+{% block title %}Pay accepted query{% endblock %}
+{% block content %}
+<h3 style="display: inline-block; float: left"><strong>Before accepting the request, you must pay 1% of the price for the property, for the services provided</strong></h3>
+<h3 style="display: inline-block; float: left"><strong>Realty which you sold</strong></h3>
+<hr>
+    <div style="width: 274px; height: 300px; flex-basis: 25%; max-width: 274px; margin-bottom: 112px;" class="col-lg-4">
+			<img style="height: 300px;" class="thumbnail" src="{{realty.photo.url}}">
+			<div class="box-element product">
+				<h6><strong>{{realty.name}}</strong></h6>
+				<h6><strong>{{realty.address.city}}</strong></h6>
+				<hr>
+                <h4 style="display: inline-block; float: right"><strong>${{realty.price}}</strong></h4>
+            </div>
+    </div>
+     <form action="{% url 'create-checkout-session' realty.slug landlord.id %}" method="POST">
+         {% csrf_token %}
+         <button type="submit" class="btn btn-outline-success" id="checkout-button">Pay</button>
+     </form>
+{% endblock %}
