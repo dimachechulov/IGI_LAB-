@@ -40,7 +40,7 @@
     </div>
 	<h3 style="display: inline-block; float: right"><strong>All realities of other users</strong></h3>
 		<hr>
-		{%for realty in realties%}
+		{%for realty in realties %}
 		<div style="width: 274px; height: 300px; flex-basis: 25%; max-width: 274px; margin-bottom: 112px;" class="col-lg-4">
 			<img style="height: 300px;" class="thumbnail" src="{{realty.photo.url}}">
 			<div class="box-element product">
@@ -154,7 +154,6 @@ BtnFilterName.addEventListener('click', function() {
         // Add the new parameter to the URL
         params.append('search_name', NameInput);
     }
-
     window.location.href = url;
 });
 const BtnDeleteFilter = document.getElementById('btn_delete_filter');

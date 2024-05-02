@@ -4,7 +4,27 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="35e2ba9c-f151-4ebe-9935-b4b62306d220" name="Changes" comment="" />
+    <list default="true" id="35e2ba9c-f151-4ebe-9935-b4b62306d220" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/EstateAgency/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/EstateAgency/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/forms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/buy_realty.html" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/buy_realty.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/category.html" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/category.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/owner/admin_info.html" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/owner/admin_info.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/owner_realty.html" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/owner_realty.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/pay_accept_query.html" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/pay_accept_query.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/profile_user.html" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/profile_user.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/query.html" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/query.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/realties.html" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/realties.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/realty.html" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/templates/agency/realty.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/templatetags/agency_tags.py" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/templatetags/agency_tags.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/tests.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EstateAgency/agency/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/EstateAgency/agency/views.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -26,14 +46,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "D:/Рабочий стол/253505_Chechulov_26/IGI/IGILR5"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Рабочий стол/253505_Chechulov_26/IGI/IGILR5&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\Рабочий стол\IGILR5\EstateAgency\media" />
@@ -106,8 +126,8 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.tests" />
       <item itemvalue="Python.manage" />
+      <item itemvalue="Python.tests" />
       <item itemvalue="Python tests.Python tests for agency.tests.TestViews.test_user_realties" />
     </list>
     <recent_temporary>

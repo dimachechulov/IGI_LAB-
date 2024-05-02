@@ -8,8 +8,10 @@ from .models import *
 from .utils import get_all_employees
 
 
+
 class DateInput(forms.DateInput):
     input_type='date'
+
 class RegisterUserForm(UserCreationForm):
     username = forms.CharField(label='UserName', widget=forms.TextInput(
         attrs={'class': 'lf--input', 'placeholder': 'Username', 'style': 'width: 400px; text-align: center; border: 1px solid black; border-radius: 10px; height: 33px;'}))
@@ -25,8 +27,8 @@ class RegisterUserForm(UserCreationForm):
         attrs={'class': 'lf--input', 'placeholder': 'Repeat password', 'style': 'width: 400px; text-align: center; border: 1px solid black; border-radius: 10px; height: 33px;'}))
     phone_number = forms.CharField(label='phone number', widget=forms.TextInput(
         attrs={'class': 'lf--input', 'placeholder': 'phone number', 'style': 'width: 400px; text-align: center; border: 1px solid black; border-radius: 10px; height: 33px;'}))
-    date = forms.DateField(label='Enter you birth day',widget=DateInput),
-    photo = forms.ImageField(label='Image')
+    date = forms.DateField(label='Enter you birth day', widget=DateInput)
+    photo = forms.ImageField(label='Image', required=False)
     class Meta:
         model = User
         fields = ('username', 'first_name','last_name', 'email', 'password1', 'password2','date', 'phone_number', 'photo')

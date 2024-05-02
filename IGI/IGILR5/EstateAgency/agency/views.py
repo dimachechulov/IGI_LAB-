@@ -1,9 +1,16 @@
+import datetime
+import os
+import statistics
+
 import django
 import requests
 import stripe
 from django.contrib.auth.models import Group
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.template.context_processors import csrf
+from django.template.defaultfilters import slugify
+from django.template.response import TemplateResponse
+
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.test import Client
@@ -24,10 +31,13 @@ from .models import *
 from .utils import get_ip_adress, get_info_user_by_ip, get_all_employees, get_all_clients, filter_sort_realties
 from django.conf import settings
 from django.contrib import messages
+from qsstats import QuerySetStats
+import matplotlib.pyplot as plt
 
 main_logger = logging.getLogger('main')
 def main(request):
-    return render(request, 'agency/base.html')
+    return TemplateResponse(request, 'agency/base.html')
+
 
 def users_realty(request):
     category = Category.objects.all()
@@ -42,7 +52,7 @@ def users_realty(request):
         'realties': realties,
         'cats': category,
     }
-    return render(request, 'agency/realties.html', context)
+    return TemplateResponse(request, 'agency/realties.html', context)
 
 def agency_realty(request):
     category = Category.objects.all()
@@ -57,7 +67,7 @@ def agency_realty(request):
         'realties': realties,
         'cats': category,
     }
-    return render(request, 'agency/realties.html', context)
+    return TemplateResponse(request, 'agency/realties.html', context)
 
 
 def user_category_realties(request, category_slug):
@@ -83,7 +93,7 @@ def user_category_realties(request, category_slug):
         'realties': realties,
         'realtys_city_user': realties_city_user
     }
-    return render(request, 'agency/category.html', context)
+    return TemplateResponse(request, 'agency/category.html', context)
 
 
 def agency_category_realties(request, category_slug):
@@ -108,7 +118,7 @@ def agency_category_realties(request, category_slug):
         'realties': realties,
         'realtys_city_user': realtys_city_user
     }
-    return render(request, 'agency/category.html', context)
+    return TemplateResponse(request, 'agency/category.html', context)
 
 def realty(request, realty_slug):
     try:
@@ -117,10 +127,13 @@ def realty(request, realty_slug):
         main_logger.error(f"Don't find realty(realty slug: {realty_slug})")
         messages.add_message(request, messages.ERROR, f"Don't find realty(realty slug: {realty_slug})")
         return redirect('main')
+
+
     context = {
         'realty': realty,
+
     }
-    return render(request, 'agency/realty.html', context)
+    return TemplateResponse(request, 'agency/realty.html', context)
 
 
 class LoginUser(LoginView):
@@ -198,7 +211,7 @@ def owner_realties(request):
         context['must_pay_realties'] = must_pay_realties
 
     context.update(csrf(request))
-    return render(request, 'agency/owner_realty.html', context)
+    return TemplateResponse(request, 'agency/owner_realty.html', context)
 
 def query(request):
 
@@ -211,7 +224,7 @@ def query(request):
     if request.user not in get_all_employees():
         querys_from = Query.objects.filter(landlord=request.user)
         context['querys_from'] = querys_from
-    return render(request, 'agency/query.html', context)
+    return TemplateResponse(request, 'agency/query.html', context)
 
 
 def create_query(request, realty_slug):
@@ -279,11 +292,27 @@ def accept_query(request, query_id):
 
 
     if request.user not in get_all_employees():
+        discount = -1
+        promocode = request.GET.get('promocode')
+        try:
+            promo = PromoCode.objects.get(code=promocode)
+            discount = promo.discount
+            request.session['discount'] = discount
+            messages.add_message(request, messages.SUCCESS, f"We find this promocode, you have discount {discount}")
+        except PromoCode.DoesNotExist:
+            if promocode is not None:
+                messages.add_message(request, messages.SUCCESS, f"We don't find promocode {promocode}")
+                main_logger.error(f"Don't find promocode with code {promocode}")
+            if 'discount' in request.session:
+                request.session.pop('discount')
+
         context = {
             'realty': realty,
             'landlord': query.landlord
         }
-        return render(request, 'agency/pay_accept_query.html', context)
+        if discount != -1:
+            context['discount'] = discount
+        return TemplateResponse(request, 'agency/pay_accept_query.html', context)
     else:
         realty.landlord = query.landlord
         realty.save()
@@ -340,7 +369,7 @@ def success(request, realty_slug, landlord_id):
         message_refusal = "You query to arent realty rejected\n"
         message_refusal += info_realty
         for q in querys:
-            if q != query:
+            if q.landlord != landlord:
                 all_emails.append(q.landlord.email)
 
 
@@ -397,11 +426,18 @@ def success(request, realty_slug, landlord_id):
                 fail_silently=False,
             )
         except Exception as ex:
+
             main_logger.error(f"Don't send message to emails: {landlord_email}")
         price = realty.price
         messages.success(request, "Success: You buy realty. Check you gmail")
 
+    discount = request.session.get('discount', None)
+    if discount:
+        request.session.pop('discount')
+        price = int(price * (1 - discount / 100))
     Transaction.objects.create(realty=realty, price=price)
+    realty.rented_at = django.utils.timezone.now()
+    realty.save()
     return redirect('main')
 
 
@@ -442,11 +478,11 @@ class AddRealtyView(CreateView):
                 new_address = addres[0]
             else:
                 new_address = Address.objects.create(city=city, state=state, address=address)
-            if Realty.objects.filter(name=name):
+            if Realty.objects.filter(slug=slugify(name)):
                 form.add_error(None, "The name must be unique")
                 return self.form_invalid(form)
             Realty.objects.create(name=name, description=description, price=price, cat=category, owner=owner,
-                                  photo=photo, address=new_address, discount=False, price_discount=100, slug=name)
+                                  photo=photo, address=new_address, slug=slugify(name))
         except:
             messages.add_message(self.request, messages.ERROR, "Some error")
             main_logger.critical(f"Can't create realty with slug {realty}")
@@ -504,7 +540,7 @@ class UpdateRealtyView(UpdateView):
             self.object.address = new_address
             self.object.discount = False
             self.object.price_discount = price
-            self.object.slug = name
+            self.object.slug = slugify(name)
             self.object.save()
 
         except Exception as ex:
@@ -547,9 +583,13 @@ def delete_query(request, query_id):
     query.delete()
     return redirect('query')
 
+
+
+
+
 def admin_info(request):
     if request.user.is_superuser:
-        all_transactions = Transaction.objects.all()
+        all_transactions = Transaction.objects.all().order_by('realty__name')
 
         realties_prices = {}
         prices = []
@@ -558,31 +598,18 @@ def admin_info(request):
             prices.append(transaction.price)
         all_category = Category.objects.all()
         if prices:
-            average = sum(prices) / len(prices)
-            mode = max(set(prices), key=prices.count)
-            sorted_seq = sorted(prices)
-            n = len(sorted_seq)
-            if n % 2 == 0:
-                mediana = (sorted_seq[n // 2 - 1] + sorted_seq[n // 2]) / 2
-            else:
-                mediana = sorted_seq[n // 2]
+            average = statistics.mean(prices)
+            mode = statistics.mode(prices)
+            mediana = statistics.median(prices)
         else:
             average = 0
             mode = 0
             mediana = 0
-
-
-
         employee_group = Group.objects.get(name='Employee')
         dates = [relativedelta(datetime.date.today(), user.date).years for user in User.objects.filter(is_superuser=False) if employee_group not in user.groups.all() ]
         if dates:
-            average_date = sum(dates) / len(dates)
-            sorted_seq = sorted(dates)
-            n = len(sorted_seq)
-            if n % 2 == 0:
-                mediana_date = (sorted_seq[n // 2 - 1] + sorted_seq[n // 2]) / 2
-            else:
-                mediana_date = sorted_seq[n // 2]
+            average_date = statistics.mean(dates)
+            mediana_date = statistics.median(dates)
         else:
             average_date = 0
             mediana_date = 0
@@ -599,6 +626,42 @@ def admin_info(request):
         most_popular_category = max(categories, key=categories.get)
         most_beneficial_category = max(categories_price, key=categories.get)
 
+
+        end_date = django.utils.timezone.now()
+        start_date = end_date+ datetime.timedelta(days=-30)
+        dates = []
+        category_hist = []
+
+        for transaction in all_transactions:
+            date = transaction.realty.rented_at
+            print(date)
+            if date and date <= end_date and date >= start_date:
+                print(date)
+                dates.append(date)
+            category_hist.append(transaction.realty.cat.name)
+        category_hist.sort()
+        dates.sort()
+        dates = [date.strftime("%d-%m") for date in dates]
+
+
+
+        plt.clf()
+        plt.hist(dates, bins=31)
+        plt.xlabel('Dates')
+        plt.ylabel('Count of Rented Realty')
+        plt.title(f'Count of Rented Realty from {start_date.strftime("%B %d, %y")}, to {end_date.strftime("%B %d, %y")}')
+        if not os.path.isdir(settings.MEDIA_ROOT+'/graphics'):
+            os.makedirs(settings.MEDIA_ROOT+'/graphics')
+
+        plt.savefig(settings.MEDIA_ROOT+'/graphics/seil_realties_by_dates.png')
+        plt.clf()
+        plt.hist(category_hist, bins=len(categories))
+        plt.xlabel('Category')
+        plt.ylabel('Count of Rented Realty')
+        plt.title(
+            f'Count of Rented Realty by category')
+        plt.savefig(settings.MEDIA_ROOT + '/graphics/seil_realties_by_cat.png')
+
         context = {
             'realties_prices': realties_prices,
             'prices': prices,
@@ -611,9 +674,11 @@ def admin_info(request):
             'categories':categories,
             'categories_price':categories_price,
             'most_popular_category':most_popular_category,
-            'most_beneficial_category':most_beneficial_category
+            'most_beneficial_category':most_beneficial_category,
+            'graphic1': settings.MEDIA_URL+'graphics/seil_realties_by_dates.png',
+            'graphic2': settings.MEDIA_URL+'graphics/seil_realties_by_cat.png',
         }
-        return render(request, 'agency/owner/admin_info.html', context)
+        return TemplateResponse(request, 'agency/owner/admin_info.html', context)
     else:
         return redirect('main')
 
@@ -632,7 +697,7 @@ def profile_user(request, user_id):
         'user': user,
         'realtys':realtys
     }
-    return render(request, 'agency/profile_user.html', context)
+    return TemplateResponse(request, 'agency/profile_user.html', context)
 
 class UpdateUserView(UpdateView):
     template_name = 'agency/update_user.html'
@@ -642,10 +707,7 @@ class UpdateUserView(UpdateView):
     }
     def get_form_class(self):
         return UpdateUserForm
-        # if self.request.user.is_superuser:
-        #     return AdminUpdateRealtyForm
-        # else:
-        #     return UpdateRealtyForm
+
 
     def form_valid(self, form):
         form.save()
@@ -653,7 +715,7 @@ class UpdateUserView(UpdateView):
 
     def form_invalid(self, form):
         main_logger.debug(f"Invalid data in Update user form, errors {form.errors}")
-        super().form_invalid(form)
+        return super().form_invalid(form)
 
     def get_success_url(self):
         return self.object.get_absolute_url()
@@ -669,13 +731,30 @@ def buy_realty(request, realty_slug):
         messages.add_message(request, messages.ERROR, f"Don't find realty with slug {realty_slug})")
         return redirect('main')
     landlord = request.user
+    discount = -1
+    promocode = request.GET.get('promocode')
+    try:
+        promo = PromoCode.objects.get(code=promocode)
+        discount= promo.discount
+        request.session['discount'] = discount
+        messages.add_message(request, messages.SUCCESS, f"We find this promocode, you have discount {discount}")
+    except PromoCode.DoesNotExist:
+        if promocode is not None:
+            messages.add_message(request, messages.SUCCESS, f"We don't find promocode {promocode}")
+            main_logger.error(f"Don't find promocode with code {promocode}")
+        if 'discount' in request.session:
+            request.session.pop('discount')
+
+
     context = {
         'realty': realty,
-        'landlord' : landlord,
+        'landlord': landlord,
         "STRIPE_PUBLIC_KEY": settings.STRIPE_PUBLIC_KEY
     }
+    if discount != -1:
+        context['discount'] = discount
     context.update(csrf(request))
-    return render(request, 'agency/buy_realty.html', context)
+    return TemplateResponse(request, 'agency/buy_realty.html', context)
 
 
 
@@ -686,10 +765,13 @@ class CreateCheckoutSessionView(View):
         realty_slug= self.kwargs["realty_slug"]
         landlord_id = self.kwargs["landlord_id"]
         realty = Realty.objects.get(slug=realty_slug)
+        discount = self.request.session.get('discount', None)
         if realty.owner not in get_all_employees():
             price = realty.price #convert dollars to cent, and /100
         else:
             price = realty.price * 100
+        if discount:
+            price = int(price * (1-discount/100))
         YOUR_DOMAIN = "http://localhost:8000"
         try:
             checkout_session = stripe.checkout.Session.create(
@@ -717,6 +799,7 @@ class CreateCheckoutSessionView(View):
         except Exception as ex:
             main_logger.critical(f"Can't create checkout session with price: {price}")
             messages.add_message(request, messages.ERROR, "Can't create checkout session")
+            return redirect('main')
 
 
 
@@ -739,7 +822,7 @@ def all_realties(request):
             'not_sold_realties': not_sold_realties,
             'employees' : employees,
         }
-        return render(request, 'agency/owner/all_realties.html', context=context)
+        return TemplateResponse(request, 'agency/owner/all_realties.html', context=context)
     else:
         return redirect('main')
 
@@ -755,7 +838,7 @@ def view_all_employees(request):
             'all_employees' : all_employees,
             'employee_realties' : employee_realties
         }
-        return render(request, 'agency/owner/all_employees.html', context=context)
+        return TemplateResponse(request, 'agency/owner/all_employees.html', context=context)
     else:
         return redirect('main')
 
@@ -767,8 +850,13 @@ def delete_employee(request, user_id):
             main_logger.error(f"Don't find user with id {user_id}")
             messages.add_message(request, messages.SUCCESS, f"You don't find you..")
             return redirect('main')
-
-        messages.add_message(request, messages.SUCCESS, f"You success delete employee")
+        except django.db.models.deletion.ProtectedError:
+            messages.add_message(request, messages.ERROR, f"First of all delete all realties, before deleted Employee")
+        else:
+            if user in get_all_employees():
+                messages.add_message(request, messages.SUCCESS, f"You success delete employee")
+            else:
+                messages.add_message(request, messages.SUCCESS, f"You success delete client")
     return redirect('main')
 
 def view_all_clients(request):
@@ -779,13 +867,14 @@ def view_all_clients(request):
         for realty in all_realties:
             if realty.owner in all_clients:
                 client_realties[realty.owner]['exposed_realty'].append(realty)
-            elif realty.landlord in all_clients and realty.is_sold:
+
+            if realty.landlord in all_clients and realty.is_sold:
                 client_realties[realty.landlord]['buying_realty'].append(realty)
         context = {
             'all_clients': all_clients,
             'client_realties': client_realties
         }
-        return render(request, 'agency/owner/all_clients.html', context=context)
+        return TemplateResponse(request, 'agency/owner/all_clients.html', context=context)
     else:
         return redirect('main')
 
@@ -814,9 +903,14 @@ def employee_clients(request, employee_id):
             'all_clients': all_clients,
             'client_realties': client_realties
         }
-        return render(request, 'agency/employee_clients.html', context=context)
+        return TemplateResponse(request, 'agency/employee_clients.html', context=context)
     else:
         return redirect('main')
+
+
+
+
+
 
 
 

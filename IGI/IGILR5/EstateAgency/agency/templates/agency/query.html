@@ -1,11 +1,12 @@
 {% extends 'agency/base.html' %}
 {% load static %}
 {% load agency_tags %}
+{% load tz %}
 {% block title %}Your realtys{% endblock %}
 
 {% block content %}
 	{% is_employee request.user as is_emp%}
-	{% is_employee query.owner as owner_is_emp %}
+
     <link rel="stylesheet" href="{% static 'store/css/CategoriesCartCheckout.css' %}">
 	<div style="display: flex; flex-wrap: wrap; width: 90%; margin: 50px auto;" class="row">
 		{% if is_emp %}
@@ -16,6 +17,8 @@
 		<hr>
       {%for query in querys_to%}
         <h6><strong>Landlord: {{query.landlord.username}}</strong></h6>
+		<p>Query Created: {{query.created_at|localtime|date:"d/m/Y, H:i"}}</p>
+		<p>Date Created UTC: {{query.created_at|utc|date:"d/m/Y, H:i"}}</p>
 		<div style="width: 274px; height: 300px; flex-basis: 25%; max-width: 274px; margin-bottom: 112px;" class="col-lg-4">
 			<img style="height: 300px;" class="thumbnail" src="{{query.realty.photo.url}}">
 			<div class="box-element product">
@@ -34,12 +37,15 @@
 			<h3 style="display: inline-block; float: right"><strong>You query to buy</strong></h3>
 			<hr>
 			{%for query in querys_from%}
+			{% is_employee query.owner as owner_is_emp %}
 			{% if not owner_is_emp %}
 			<h6><strong>Owner: {{query.owner.username}}</strong></h6>
-
 			{% else %}
 			<h6><strong>Employee: {{query.owner.username}}</strong></h6>
+
 			{% endif %}
+			<p>Date Created: {{query.created_at|localtime|date:"d/m/Y, H:i"}}</p>
+			<p>Date Created UTC: {{query.created_at|utc|date:"d/m/Y, H:i"}}</p>
 			<div style="width: 274px; height: 300px; flex-basis: 25%; max-width: 274px; margin-bottom: 112px;" class="col-lg-4">
 				<img style="height: 300px;" class="thumbnail" src="{{query.realty.photo.url}}">
 				<div class="box-element product">

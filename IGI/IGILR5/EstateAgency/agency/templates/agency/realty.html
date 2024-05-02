@@ -1,5 +1,6 @@
 {% extends 'agency/base.html' %}
 {% load static %}
+{% load tz %}
 {% load agency_tags %}
 {% block title %}Realty{% endblock %}
 
@@ -132,14 +133,21 @@
 		<div class="product-tumb">
 			<img src="{{realty.photo.url}}" alt="">
 		</div>
+
 		<div class="product-details">
+
 			<span class="product-catagory">{{realty.category.name}}</span>
 			<h4>{{realty.name}}</h4>
 			<p>{{realty.description}}</p>
 			<p>State: {{realty.address.state}}</p>
 			<p>City: {{realty.address.city}}</p>
 			<p>Address: {{realty.address.address}}</p>
-			<p>Date Created: {{realty.created_at}}</p>
+    		<p>Date Created: {{realty.created_at|localtime|date:"d/m/Y, H:i"}}</p>
+    		<p>Date Created UTC:  {{realty.created_at|utc|date:"d/m/Y, H:i"}}</p>
+			{% if realty.updated_at %}
+				<p>Date Last Updated: {{realty.updated_at|localtime|date:"d/m/Y, H:i"}}</p>
+				<p>Date Last Updated UTC: {{realty.updated_at|utc|date:"d/m/Y, H:i"}}</p>
+			{% endif %}
 			{%is_agency_realty realty as is_agency %}
 			{%if is_agency %}
 			<p>Employee: <a href="{{realty.owner.get_absolute_url}}">{{realty.owner.username}}</a></p>

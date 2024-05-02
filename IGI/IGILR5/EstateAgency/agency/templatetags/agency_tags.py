@@ -17,3 +17,7 @@ def is_agency_realty(realty):
 @register.simple_tag(name='is_employee')
 def is_employee(user):
     return user in get_all_employees()
+
+@register.simple_tag(name='get_price_discount')
+def get_price_discount(price, discount):
+    return price * (1- discount / 100)

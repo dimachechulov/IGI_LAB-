@@ -11,9 +11,9 @@ import datetime
 
 class User(AbstractUser):
     date = models.DateField(null=True, validators=[MaxValueValidator(limit_value=datetime.date.today() - datetime.timedelta(days=18*365),   message="You must be 18 or older to use this service")])
-    phone_regex = RegexValidator(regex=r'^\+375?29|33|25?\d{8}$',
+    phone_regex = RegexValidator(regex=r'^(\+375)?\((29|33|25)\)\d{7}$',
                                  message="Phone number must be entered in the format: '+375(29)XXXXXX'")
-    phone_number = models.CharField(validators=[phone_regex], max_length=17, blank=True)
+    phone_number = models.CharField(validators=[phone_regex], max_length=15, blank=True)
     photo = models.ImageField(upload_to='avatars', default='default_avatar.png')
     def get_absolute_url(self):
         return reverse('profile_user', kwargs={'user_id': self.id})
@@ -46,15 +46,14 @@ class Realty(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, db_index=True)
     description = models.TextField(blank=True)
-    discount = models.BooleanField(default=False)
     price = models.IntegerField()
-    price_discount = models.IntegerField(blank=True, null=True)
     photo = models.ImageField(upload_to="photos")
     cat = models.ForeignKey('Category', on_delete=models.PROTECT)
     owner = models.ForeignKey('User',on_delete=models.PROTECT, related_name="Owner")
     landlord = models.ForeignKey('User', blank=True, null=True, on_delete=models.SET_NULL, related_name="Landbord")
-    created_at = models.DateField(default=django.utils.timezone.now)
-    rented_at = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(default=django.utils.timezone.now)
+    updated_at = models.DateTimeField(null=True, blank=True,auto_now=True)
+    rented_at = models.DateTimeField(null=True, blank=True)
     address = models.ForeignKey('Address',  on_delete=models.PROTECT)
     is_sold = models.BooleanField(default=False)
     def __str__(self):
@@ -87,6 +86,7 @@ class Category(models.Model):
 class Query(models.Model):
     id = models.AutoField(primary_key=True)
     realty = models.ForeignKey('Realty', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=django.utils.timezone.now)
     landlord = models.ForeignKey('User',on_delete=models.CASCADE, related_name="query_landlord")
     owner = models.ForeignKey('User', on_delete=models.CASCADE, related_name="query_owner")
     def __str__(self):
@@ -112,6 +112,7 @@ class Transaction(models.Model):
     price = models.IntegerField()
 
 class Article(models.Model):
+    created_at = models.DateTimeField(default=django.utils.timezone.now)
     id = models.AutoField(primary_key=True)
     publisher = models.ForeignKey('User', on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
@@ -122,10 +123,12 @@ class InformationCompany(models.Model):
 
 
 class Question(models.Model):
+    created_at = models.DateTimeField(default=django.utils.timezone.now)
     id = models.AutoField(primary_key=True)
     text = models.TextField()
 
 class Answer(models.Model):
+    created_at = models.DateTimeField(default=django.utils.timezone.now)
     id = models.AutoField(primary_key=True)
     text = models.TextField()
     question = models.ForeignKey('Question', on_delete=models.CASCADE)
@@ -134,6 +137,7 @@ class PrivacyPolicy(models.Model):
     text = models.TextField()
 
 class Vacancy(models.Model):
+    created_at = models.DateTimeField(default=django.utils.timezone.now)
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     description = models.TextField()
@@ -149,6 +153,7 @@ class Review(models.Model):
         return f'{self.user} - {self.text[:50]}'
 
 class PromoCode(models.Model):
+    created_at = models.DateTimeField(default=django.utils.timezone.now)
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=100)
     discount = models.IntegerField(default=5, validators=[MinValueValidator(1), MaxValueValidator(100)])

@@ -14,8 +14,46 @@
                 <h4 style="display: inline-block; float: right"><strong>${{realty.price}}</strong></h4>
             </div>
     </div>
+
+     <label style="white-space:nowrap">Enter promocode</label>
+        <input class="form-control search-input me-2" type="text"  placeholder="Promocode" aria-label="Search" id ="promocode" >
+        <button id="btn_promocode" class="btn btn-dark">GET</button>
      <form action="{% url 'create-checkout-session' realty.slug landlord.id %}" method="POST">
          {% csrf_token %}
          <button type="submit" class="btn btn-outline-success" id="checkout-button">Pay</button>
      </form>
+
+
+<script>
+    const discount =localStorage.getItem('Discpount');
+
+const BtnPromocode= document.getElementById('btn_promocode');
+
+
+const savedPromocode = localStorage.getItem('Promocode');
+
+if (savedPromocode) {
+    document.getElementById('promocode').value = savedPromocode;
+}
+
+
+
+
+BtnPromocode.addEventListener('click', function() {
+    const Promocode = document.getElementById('promocode').value;
+    localStorage.setItem('Promocode', Promocode);
+    console.log(Promocode);
+    var url = new URL(window.location.href);
+    var params = url.searchParams;
+     if (params.has('promocode')) {
+        // Update the existing parameter value
+        params.set('promocode', Promocode);
+    } else {
+        // Add the new parameter to the URL
+        params.append('promocode', Promocode);
+    }
+    window.location.href = url;
+
+});
+</script>
 {% endblock %}

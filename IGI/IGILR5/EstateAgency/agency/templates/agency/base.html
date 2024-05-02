@@ -1,5 +1,6 @@
 {% load static %}
 {% load agency_tags %}
+{% load tz %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -23,7 +24,7 @@
     <nav class="navbar navbar-expand-sm navbar-dark main-nav">
     <div class="container justify-content-center"  style="margin-right : 5px">
      {% if request.user.is_superuser %}
-        <ul class="nav navbar-nav justify-content-center">
+        <ul class="nav navbar-nav justify-content-end">
             <li class="nav-item">
 
                 <li class="nav-item">
@@ -46,7 +47,7 @@
         </ul>
 
         {% elif  is_emp %}
-        <ul class="nav navbar-nav justify-content-center">
+        <ul class="nav navbar-nav justify-content-end">
             <li class="nav-item">
             <a class="nav-link lk" href="{% url 'owner_realties' %}">You Realties</a>
             </li>
@@ -85,15 +86,16 @@
                 <a class="nav-link lk" href="{% url 'login' %}">Login</a>
             </li>
             {%endif%}
-
-
-
-
+        </ul>
         {%endif%}
+
+        <ul class="nav navbar-nav w-100 justify-content-end">
         <li class="nav-item">
-                <p id="current_timezone"></p>
-                <p id="utc_timezone"></p>
-            </li>
+            {% get_current_timezone as TIME_ZONE %}
+			<p>Your Time Zone: {{TIME_ZONE}}</p>
+            <p><pre>{{calendar}}</pre></p>
+
+        </li>
         </ul>
     </div>
     </nav>

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'agency',
+    'tz'
 
 ]
 
@@ -52,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'agency.utils.TimezoneMiddleware'
 ]
 
 ROOT_URLCONF = 'EstateAgency.urls'
@@ -183,6 +185,6 @@ STRIPE_SECRET_KEY='sk_test_51MuzOWFO8xyXT4lxbZ3IRv7iIqHk0IJ8bcnKyl7HTcbDGmmEDayJ
 STRIPE_WEBHOOK_SECRET='whsec_1b7f1ca18c6e4ca2995958d28097e6dfe3d280b1b7b4606a0f0c3696affba753'
 
 
-
+TIME_ZONE = "UTC"
 
 

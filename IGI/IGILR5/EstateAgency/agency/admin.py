@@ -59,7 +59,7 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Realty)
 class Realty(admin.ModelAdmin):
-    list_display = ('name', 'price', 'cat', 'owner', 'landlord', 'created_at', 'is_sold')
+    list_display = ('name', 'price', 'cat', 'owner', 'landlord', 'created_at','updated_at', 'rented_at', 'is_sold')
     list_filter = ('cat', 'owner', 'landlord', 'is_sold')
     ordering = ('-created_at',)
     inlines = [QueryRealtyInline, TransactionRealtyInline]
@@ -88,12 +88,12 @@ class Transaction(admin.ModelAdmin):
     list_display = ('realty', 'price')
 
 
-admin.register(InformationCompany)
-admin.register(PrivacyPolicy)
-admin.register(PromoCode)
-admin.register(Question)
-admin.register(Vacancy)
-admin.register(Review)
-admin.register(Article)
-admin.register(Answer)
+admin.site.register(InformationCompany)
+admin.site.register(PrivacyPolicy)
+admin.site.register(PromoCode)
+admin.site.register(Question)
+admin.site.register(Vacancy)
+admin.site.register(Review)
+admin.site.register(Article)
+admin.site.register(Answer)
 

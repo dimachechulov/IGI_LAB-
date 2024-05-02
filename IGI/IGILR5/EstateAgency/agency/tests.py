@@ -377,7 +377,7 @@ class TestViews(TestCase):
             'first_name': 'John',
             'last_name': 'Doe',
             'email': 'john.doe@example.com',
-            'phone_number': '1234567890',
+            'phone_number': '(29)3456789',
             'date': '1990-01-01',  # Формат даты: ГГГГ-ММ-ДД
         }
         uploaded_file = SimpleUploadedFile(
@@ -439,7 +439,7 @@ class TestViews(TestCase):
             'password2': 'dsfsfm3jjwdm,!jhsdfhskdfSDJF',
             'last_name': 'Doe',
             'email': 'john.doe@example.com',
-            'phone_number': '1234567890',
+            'phone_number': '(29)3456789',
             'date': '1990-01-01',  # Формат даты: ГГГГ-ММ-ДД
         }
         uploaded_file = SimpleUploadedFile(
@@ -464,7 +464,7 @@ class TestViews(TestCase):
             'password2': 'dsfsfm3jjwdm,!jhsdfhskdfSDJF',
             'last_name': 'Doe',
             'email': 'john.doe@example.com',
-            'phone_number': '1234567890',
+            'phone_number': '(29)3456789',
             'date': '1990-01-01',  # Формат даты: ГГГГ-ММ-ДД
         }
         uploaded_file = SimpleUploadedFile(

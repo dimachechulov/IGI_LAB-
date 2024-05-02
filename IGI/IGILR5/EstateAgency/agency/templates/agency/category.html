@@ -22,15 +22,22 @@
 			</ul>
 		</div>
 	</nav>
-	<form class="d-flex" role="search" id="filter-form">
-        <input class="form-control search-input me-2" type="number" min="1" placeholder="Min price" aria-label="Search" name ="min_area" value="{{ search_input }}">
-		<input class="form-control search-input me-2" type="number" min="1" placeholder="Max price" aria-label="Search" name ="max_area" value="{{ search_input }}">
-        <button type="submit" class="btn btn-dark">GET</button>
-	</form>
-	<form class="d-flex" role="search" id="search-form">
-        <input class="form-control search-input me-2" type="search" placeholder="Search" aria-label="Search" name ="search_area" value="{{ search_input }}">
-        <button type="submit" id="search_id" class="btn btn-dark">FIND</button>
-	</form>
+	<div style="display:flex">
+         <label style="white-space:nowrap">Filter price</label>
+        <input class="form-control search-input me-2" type="number" min="1" placeholder="Min price" aria-label="Search" id ="min_area" >
+		<input class="form-control search-input me-2" type="number" min="1" placeholder="Max price" aria-label="Search" id ="max_area" >
+        <button id="btn_filter_price" class="btn btn-dark">GET</button>
+        <input  class="form-control search-input me-2" type="search" placeholder="Search" aria-label="Search" id ="search_area">
+        <button id="btn_filter_name" class="btn btn-dark">FIND</button>
+        <select id="select-sort">
+            <option value="name">Sort by name</option>
+            <option value="cat">Sort by category</option>
+            <option value="price">Sort by price(Ascending)</option>
+            <option value="-price">Sort by price(Descending)</option>
+
+        </select>
+         <button id="btn_delete_filter"  style="white-space:nowrap" class="btn btn-dark">Delete all filters</button>
+    </div>
     <link rel="stylesheet" href="{% static 'agency/css/CategoriesCartCheckout.css' %}">
 
 	<div style="display: flex; flex-wrap: wrap; width: 90%; margin: 50px auto;" class="row">
@@ -73,21 +80,112 @@
 
 	</div>
 <script>
-    const form = document.querySelector('#filter-form');
-    const button = form.querySelector('button[type="submit"]');
+const selectSort = document.getElementById('select-sort');
+const savedSelectedSort = localStorage.getItem('selectedSort');
 
-    button.addEventListener('click', (event) => {
-        event.preventDefault();
-        form.submit();
-    });
+if (savedSelectedSort) {
+    selectSort.value = savedSelectedSort;
+}
 
-    const form1 = document.querySelector('#search-form');
-    const button1 = document.getElementById('search_id');
+selectSort.addEventListener('change', function() {
+    const selectedSort = selectSort.value;
+    localStorage.setItem('selectedSort', selectedSort);
+    var url = new URL(window.location.href);
+    var params = url.searchParams;
+    if (params.has('selectedSort')) {
+        // Update the existing parameter value
+        params.set('selectedSort', selectedSort);
+    } else {
+        // Add the new parameter to the URL
+        params.append('selectedSort', selectedSort);
+    }
+    window.location.href = url;
+});
+const BtnFilterPrice = document.getElementById('btn_filter_price');
 
 
-    button1.addEventListener('click', (event) => {
-        event.preventDefault();
-        form1.submit();
-    });
+const savedMaxInput = localStorage.getItem('InputMax');
+
+if (savedMaxInput) {
+    document.getElementById('max_area').value = savedMaxInput;
+}
+
+const savedMinInput = localStorage.getItem('InputMin');
+
+if (savedMinInput) {
+    document.getElementById('min_area').value = savedMinInput;
+}
+
+BtnFilterPrice.addEventListener('click', function() {
+    const InputMax = document.getElementById('max_area').value;
+    const InputMin = document.getElementById('min_area').value;
+    if (InputMin <= 0 || InputMax <= 0){
+        if (InputMin <= 0 ){
+            alert('Minimun price must be >0');
+        }
+        else{
+            alert('Maximum price must be >0');
+        }
+    }
+    else{
+
+        localStorage.setItem('InputMax', InputMax);
+        localStorage.setItem('InputMin', InputMin);
+        var url = new URL(window.location.href);
+        var params = url.searchParams;
+         if (params.has('min_price')) {
+            // Update the existing parameter value
+            params.set('min_price', InputMin);
+        } else {
+            // Add the new parameter to the URL
+            params.append('min_price', InputMin);
+        }
+        if (params.has('max_price')) {
+            // Update the existing parameter value
+            params.set('max_price', InputMax);
+        } else {
+            // Add the new parameter to the URL
+            params.append('max_price', InputMax);
+        }
+         window.location.href = url;
+    }
+
+
+});
+
+
+const BtnFilterName = document.getElementById('btn_filter_name');
+
+
+const savedNameInput = localStorage.getItem('NameInput');
+
+if (savedNameInput) {
+    document.getElementById('search_area').value = savedNameInput;
+}
+
+
+
+BtnFilterName.addEventListener('click', function() {
+    const NameInput = document.getElementById('search_area').value;
+    localStorage.setItem('NameInput', NameInput);
+    var url = new URL(window.location.href);
+    var params = url.searchParams;
+     if (params.has('search_name')) {
+        // Update the existing parameter value
+        params.set('search_name', NameInput);
+    } else {
+        // Add the new parameter to the URL
+        params.append('search_name', NameInput);
+    }
+
+    window.location.href = url;
+});
+const BtnDeleteFilter = document.getElementById('btn_delete_filter');
+BtnDeleteFilter.addEventListener('click', function() {
+    localStorage.clear()
+    var url = new URL(window.location.href);
+    url.search = '';
+    window.location.href = url;
+});
     </script>
 {% endblock %}
