@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import *
-
+from django.contrib.sessions.models import Session
 
 
 
@@ -95,5 +95,5 @@ admin.site.register(Question)
 admin.site.register(Vacancy)
 admin.site.register(Review)
 admin.site.register(Article)
-admin.site.register(Answer)
+admin.site.register(Session)
 

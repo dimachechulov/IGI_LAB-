@@ -75,6 +75,7 @@
             <li class="nav-item">
                 <a class="nav-link lk" href="{{request.user.get_absolute_url}}">Your profile</a>
             </li>
+
             <li class="nav-item">
                 <a class="nav-link lk" href="{% url 'logout' %}">Logout</a>
             </li>
@@ -86,6 +87,19 @@
                 <a class="nav-link lk" href="{% url 'login' %}">Login</a>
             </li>
             {%endif%}
+
+            <li class="nav-item">
+                <a class="nav-link lk" href="{% url 'info_company' %}">Info about Company</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link lk" href="{% url 'news' %}">News</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link lk" href="{% url 'FAQ' %}">FAQ</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link lk" href="{% url 'vacancies' %}">Vacancies</a>
+            </li>
         </ul>
         {%endif%}
 
@@ -94,6 +108,7 @@
             {% get_current_timezone as TIME_ZONE %}
 			<p>Your Time Zone: {{TIME_ZONE}}</p>
             <p><pre>{{calendar}}</pre></p>
+
 
         </li>
         </ul>

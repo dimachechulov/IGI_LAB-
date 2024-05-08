@@ -51,7 +51,7 @@ class Realty(models.Model):
     cat = models.ForeignKey('Category', on_delete=models.PROTECT)
     owner = models.ForeignKey('User',on_delete=models.PROTECT, related_name="Owner")
     landlord = models.ForeignKey('User', blank=True, null=True, on_delete=models.SET_NULL, related_name="Landbord")
-    created_at = models.DateTimeField(default=django.utils.timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(null=True, blank=True,auto_now=True)
     rented_at = models.DateTimeField(null=True, blank=True)
     address = models.ForeignKey('Address',  on_delete=models.PROTECT)
@@ -86,7 +86,7 @@ class Category(models.Model):
 class Query(models.Model):
     id = models.AutoField(primary_key=True)
     realty = models.ForeignKey('Realty', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(default=django.utils.timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     landlord = models.ForeignKey('User',on_delete=models.CASCADE, related_name="query_landlord")
     owner = models.ForeignKey('User', on_delete=models.CASCADE, related_name="query_owner")
     def __str__(self):
@@ -112,32 +112,34 @@ class Transaction(models.Model):
     price = models.IntegerField()
 
 class Article(models.Model):
-    created_at = models.DateTimeField(default=django.utils.timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     id = models.AutoField(primary_key=True)
     publisher = models.ForeignKey('User', on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     text = models.TextField()
+
+    def get_absolute_url(self):
+        return reverse('article', kwargs={'article_id': self.id})
+
+    def ___str__(self):
+        return self.title
 
 class InformationCompany(models.Model):
     information = models.TextField()
 
 
 class Question(models.Model):
-    created_at = models.DateTimeField(default=django.utils.timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     id = models.AutoField(primary_key=True)
     text = models.TextField()
+    answer = models.TextField()
 
-class Answer(models.Model):
-    created_at = models.DateTimeField(default=django.utils.timezone.now)
-    id = models.AutoField(primary_key=True)
-    text = models.TextField()
-    question = models.ForeignKey('Question', on_delete=models.CASCADE)
 
 class PrivacyPolicy(models.Model):
     text = models.TextField()
 
 class Vacancy(models.Model):
-    created_at = models.DateTimeField(default=django.utils.timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     description = models.TextField()
@@ -153,7 +155,7 @@ class Review(models.Model):
         return f'{self.user} - {self.text[:50]}'
 
 class PromoCode(models.Model):
-    created_at = models.DateTimeField(default=django.utils.timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=100)
     discount = models.IntegerField(default=5, validators=[MinValueValidator(1), MaxValueValidator(100)])

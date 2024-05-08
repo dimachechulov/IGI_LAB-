@@ -20,29 +20,33 @@ from django.contrib.auth import logout, login
 from django.contrib.auth.views import LoginView
 from django.core.mail import send_mail
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, UpdateView
 import logging
 from .forms import LoginUserForm, RegisterUserForm, AddRealtyForm, AdminAddRealtyForm, AdminUpdateRealtyForm, \
-    UpdateRealtyForm, UpdateUserForm
+    UpdateRealtyForm, UpdateUserForm, ReviewForm
 from .models import *
 from .utils import get_ip_adress, get_info_user_by_ip, get_all_employees, get_all_clients, filter_sort_realties
 from django.conf import settings
 from django.contrib import messages
-from qsstats import QuerySetStats
+from django.db import connection
 import matplotlib.pyplot as plt
 
 main_logger = logging.getLogger('main')
 def main(request):
-    return TemplateResponse(request, 'agency/base.html')
+    last_article = Article.objects.latest('created_at')
+    context = {
+        'last_article': last_article
+    }
+    return TemplateResponse(request, 'agency/main.html', context=context)
 
 
 def users_realty(request):
     category = Category.objects.all()
     all_employees = get_all_employees()
-    realties = Realty.objects.filter(~Q(owner__in=all_employees), landlord__isnull=True)
+    realties = Realty.objects.select_related('address').filter(~Q(owner__in=all_employees), landlord__isnull=True)
     realties = filter_sort_realties(request, realties)
     if request.user.is_authenticated:
         realties = realties.filter(~Q(owner=request.user))
@@ -57,7 +61,7 @@ def users_realty(request):
 def agency_realty(request):
     category = Category.objects.all()
     all_employees = get_all_employees()
-    realties = Realty.objects.filter(landlord__isnull=True,  owner__in=all_employees)
+    realties = Realty.objects.select_related('address').filter(landlord__isnull=True,  owner__in=all_employees)
     realties = filter_sort_realties(request, realties)
     if request.user.is_authenticated:
         realties = realties.filter(~Q(owner=request.user))
@@ -80,7 +84,7 @@ def user_category_realties(request, category_slug):
         main_logger.error(f"Don't get ip of user: {request.user}")
         user_city = None
     all_employees = get_all_employees()
-    realties = Realty.objects.filter(~Q(owner__in=all_employees), landlord__isnull=True,cat=cat)
+    realties = Realty.objects.select_related('address').filter(~Q(owner__in=all_employees), landlord__isnull=True,cat=cat)
     if request.user.is_authenticated:
         realties = realties.filter(~Q(owner=request.user))
     realties = filter_sort_realties(request, realties)
@@ -106,7 +110,7 @@ def agency_category_realties(request, category_slug):
         main_logger.error(f"Don't get ip of user: {request.user}")
         user_city = None
     all_employees = get_all_employees()
-    realties = Realty.objects.filter(landlord__isnull=True, cat=cat,  owner__in=all_employees)
+    realties = Realty.objects.select_related('address').filter(landlord__isnull=True, cat=cat,  owner__in=all_employees)
     if request.user.is_authenticated:
         realties = realties.filter(~Q(owner=request.user))
     realties = filter_sort_realties(request, realties)
@@ -122,15 +126,31 @@ def agency_category_realties(request, category_slug):
 
 def realty(request, realty_slug):
     try:
-        realty = Realty.objects.get(slug=realty_slug)
+        realty = Realty.objects.select_related('address').get(slug=realty_slug)
+        reviews = realty.comments.all()
     except Realty.DoesNotExist as ex:
         main_logger.error(f"Don't find realty(realty slug: {realty_slug})")
         messages.add_message(request, messages.ERROR, f"Don't find realty(realty slug: {realty_slug})")
         return redirect('main')
+    form = ReviewForm(request.POST or None)
+    if form.is_valid() and not request.user.is_authenticated:
+        messages.info(request, 'You must log in to your account to leave a review.')
+        return redirect('login')
+
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.user = request.user
+        comment.realty = realty
+        comment.rating = form.cleaned_data['rating']
+        comment.save()
+        messages.success(request, 'Your comment was added.')
+        return redirect('realty', realty_slug=realty_slug)
 
 
     context = {
         'realty': realty,
+        'form': form,
+        'comments' : reviews
 
     }
     return TemplateResponse(request, 'agency/realty.html', context)
@@ -195,7 +215,7 @@ def logout_user(request):
 def owner_realties(request):
     if not request.user.is_authenticated:
         return redirect('main')
-    realtys = Realty.objects.filter(owner=request.user)
+    realtys = Realty.objects.select_related('address').select_related('address').filter(owner=request.user)
     owner_buying_realties = realtys.filter(is_sold=True)
     owner_not_buying_realties = realtys.filter(is_sold=False)
     category = Category.objects.all()
@@ -589,7 +609,7 @@ def delete_query(request, query_id):
 
 def admin_info(request):
     if request.user.is_superuser:
-        all_transactions = Transaction.objects.all().order_by('realty__name')
+        all_transactions = Transaction.objects.select_related('realty').select_related('realty__cat').select_related('realty__owner').select_related('realty__landlord').all().order_by('realty__name')
 
         realties_prices = {}
         prices = []
@@ -606,7 +626,7 @@ def admin_info(request):
             mode = 0
             mediana = 0
         employee_group = Group.objects.get(name='Employee')
-        dates = [relativedelta(datetime.date.today(), user.date).years for user in User.objects.filter(is_superuser=False) if employee_group not in user.groups.all() ]
+        dates = [relativedelta(datetime.date.today(), user.date).years for user in User.objects.prefetch_related('groups').filter(is_superuser=False) if employee_group not in user.groups.all() ]
         if dates:
             average_date = statistics.mean(dates)
             mediana_date = statistics.median(dates)
@@ -634,9 +654,7 @@ def admin_info(request):
 
         for transaction in all_transactions:
             date = transaction.realty.rented_at
-            print(date)
             if date and date <= end_date and date >= start_date:
-                print(date)
                 dates.append(date)
             category_hist.append(transaction.realty.cat.name)
         category_hist.sort()
@@ -692,7 +710,7 @@ def profile_user(request, user_id):
         main_logger.error(f"Don't find user with id {user_id})")
         messages.add_message(request, messages.ERROR, f"Somer errors, try again")
         return redirect('main')
-    realtys = Realty.objects.filter(owner=user)
+    realtys = Realty.objects.select_related('address').filter(owner=user)
     context={
         'user': user,
         'realtys':realtys
@@ -813,7 +831,7 @@ def all_realties(request):
     if request.user.is_superuser:
 
         employees = get_all_employees()
-        realties = Realty.objects.all()
+        realties = Realty.objects.select_related('address').all()
         realties = filter_sort_realties(request, realties)
         sold_realties = realties.filter(is_sold=True)
         not_sold_realties = realties.filter(is_sold=False)
@@ -829,7 +847,7 @@ def all_realties(request):
 def view_all_employees(request):
     if request.user.is_superuser:
         all_employees = get_all_employees()
-        all_realties = Realty.objects.all()
+        all_realties = Realty.objects.select_related('address').select_related('owner').select_related('landlord').all()
         employee_realties = { employee : [] for employee in all_employees}
         for realty in all_realties:
             if realty.owner in all_employees:
@@ -862,7 +880,7 @@ def delete_employee(request, user_id):
 def view_all_clients(request):
     if request.user.is_superuser:
         all_clients = get_all_clients()
-        all_realties = Realty.objects.all()
+        all_realties = Realty.objects.select_related('address').select_related('owner').select_related('landlord').all()
         client_realties = {client: {'buying_realty': [], 'exposed_realty': []} for client in all_clients}
         for realty in all_realties:
             if realty.owner in all_clients:
@@ -889,11 +907,11 @@ def employee_clients(request, employee_id):
             messages.add_message(request, messages.SUCCESS, f"You don't find you..")
             return redirect('main')
         all_clients = get_all_clients()
-        all_realties = Realty.objects.all()
+        all_realties = Realty.objects.select_related('address').select_related('owner').select_related('landlord').all()
         client_realties = {client: {'buying_realty': [], 'send_query_realty': []} for client in all_clients}
         for realty in all_realties:
             if realty.owner == selected_employee:
-                query_by_realty = Query.objects.filter(realty=realty)
+                query_by_realty = Query.objects.select_related('realty').select_related('landlord').filter(realty=realty)
                 for query in query_by_realty:
                     client_realties[query.landlord]['send_query_realty'].append(realty)
                 if realty.landlord in all_clients and realty.is_sold:
@@ -906,6 +924,47 @@ def employee_clients(request, employee_id):
         return TemplateResponse(request, 'agency/employee_clients.html', context=context)
     else:
         return redirect('main')
+
+
+def view_info_company(request):
+    info = InformationCompany.objects.first()
+    privacy = PrivacyPolicy.objects.first()
+    context = {
+        'info': info,
+        'privacy': privacy
+    }
+    return TemplateResponse(request, 'agency/InfoCompany.html', context=context)
+
+def view_news(request):
+    all_article = Article.objects.select_related('publisher').all()
+    context = {
+        'all_article': all_article,
+    }
+    return TemplateResponse(request, 'agency/articlies.html', context=context)
+
+
+def view_article(request, article_id):
+    article = get_object_or_404(Article, id=article_id)
+    context = {
+        'article': article,
+    }
+    return TemplateResponse(request, 'agency/article.html', context=context)
+
+
+def view_FAQ(request):
+    all_questions = Question.objects.all().order_by('-created_at')
+    context = {
+        'all_questions': all_questions,
+    }
+    return TemplateResponse(request, 'agency/FAQ.html', context=context)
+
+def view_vacancies(request):
+    all_vacancies = Vacancy.objects.all().order_by('-created_at')
+    context = {
+        'all_vacancies': all_vacancies,
+    }
+    return TemplateResponse(request, 'agency/vacancies.html', context=context)
+
 
 
 

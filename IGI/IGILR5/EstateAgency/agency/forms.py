@@ -150,3 +150,12 @@ class UpdateUserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('username', 'first_name','last_name', 'email', 'date', 'phone_number', 'photo')
+
+
+class ReviewForm(forms.ModelForm):
+    rating = forms.IntegerField(widget=forms.NumberInput(attrs={'min': '1', 'max': '5', 'step': '1'}), required=True)
+    text = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}))
+
+    class Meta:
+        model = Review
+        fields = ('rating', 'text')

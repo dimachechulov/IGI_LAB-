@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'agency',
-    'tz'
+    'tz',
+    'debug_toolbar',
 
 ]
 
@@ -53,9 +54,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'agency.utils.TimezoneMiddleware'
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    'agency.utils.TimezoneMiddleware',
+
 ]
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 ROOT_URLCONF = 'EstateAgency.urls'
 
 TEMPLATES = [
@@ -186,5 +192,8 @@ STRIPE_WEBHOOK_SECRET='whsec_1b7f1ca18c6e4ca2995958d28097e6dfe3d280b1b7b4606a0f0
 
 
 TIME_ZONE = "UTC"
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
 
 

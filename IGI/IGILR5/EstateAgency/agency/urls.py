@@ -33,4 +33,9 @@ urlpatterns = [
     re_path(r'^owner/add_employee/$', views.RegisterUser.as_view(), name='add_employee'),
     re_path(r'^owner/delete_employee/(?P<user_id>\d+)/$', views.delete_employee, name='delete_employee'),
     re_path(r'^employee_clients/(?P<employee_id>\d+)/$', views.employee_clients, name='employee_clients'),
+    re_path(r'^company/$', views.view_info_company, name='info_company'),
+    re_path(r'^news/$', views.view_news, name='news'),
+    re_path(r'^article/(?P<article_id>\d+)/$', views.view_article, name='article'),
+    re_path(r'^FAQ/$', views.view_FAQ, name='FAQ'),
+    re_path(r'^vacancies/$', views.view_vacancies, name='vacancies')
 ]

@@ -1,0 +1,21 @@
+{% extends 'agency/base.html' %}
+{%load static %}
+{% load tz %}
+{% block title %}All vacancies{% endblock %}
+{% block content %}
+
+    {% for vacancy in all_vacancies %}
+    <div class="col-md-8" style="box-shadow:hsl(0, 0%, 80%) 0 0 16px; border-radius: 4px; margin: 30px auto;">
+        <div class="media g-mb-30 media-comment">
+            <div class="media-body u-shadow-v18 g-bg-secondary g-pa-30">
+              <h4>Name: {{vacancy.name}}</h4>
+                <span class="g-color-gray-dark-v4 g-font-size-12">Create localtime: {{vacancy.created_at|localtime|date:"d/m/Y, H:i"}}</span>
+                <span class="g-color-gray-dark-v4 g-font-size-12">Create UTC: {{vacancy.created_at|utc|date:"d/m/Y, H:i"}}</span>
+              <p style="margin-bottom: 0;">Description {{vacancy.description}}</p>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+        <p style="text-align: center; margin-top: 16px; font-size: 20px;">No vacancies yet...</p>
+    {% endfor %}
+{% endblock %}

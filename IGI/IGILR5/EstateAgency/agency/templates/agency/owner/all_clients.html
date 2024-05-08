@@ -3,7 +3,6 @@
 {% block title %}{{title}}{% endblock %}
 {% block content %}
 <div style="display: flex; flex-wrap: wrap; width: 90%; margin: 50px auto;" class="row">
-    <a class="btn btn-outline-success" href="{% url 'add_employee' %}">Add employee</a>
 {%for now_client in client_realties.keys %}
   <h3 style="display: inline-block; float: right"><strong>Information about client</strong></h3>
   <hr>

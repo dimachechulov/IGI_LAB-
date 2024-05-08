@@ -1,5 +1,7 @@
 from django import template
+from django.contrib.auth.models import Group
 
+from ..models import User
 from ..utils import get_all_employees
 
 register = template.Library()

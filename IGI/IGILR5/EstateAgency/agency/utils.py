@@ -6,7 +6,7 @@ from django.conf import settings
 import requests
 from django.contrib.auth.models import Group
 from django.db.models import Q
-
+from requests.exceptions import ConnectionError
 from .models import User
 import zoneinfo
 
@@ -28,16 +28,21 @@ def get_ip_adress(request):
     return ip
 
 def get_info_user_by_ip(ip):
-    response = requests.get(f'https://ipinfo.io/{ip}/geo')
-    return response.json()
+    try:
+        response = requests.get(f'https://ipinfo.io/{ip}/geo')
+        return response.json()
+    except ConnectionError as ex:
+        return {
+            'status': 406
+        }
 
 def get_all_employees():
     employee_group,created = Group.objects.get_or_create(name='Employee')
-    all_employees = User.objects.filter(groups=employee_group)
-    return all_employees
+    return employee_group.user_set.all()
 
 def get_all_clients():
     employee_group,created = Group.objects.get_or_create(name='Employee')
+
     all_clients = User.objects.filter(~Q(groups=employee_group), is_superuser=False)
     return all_clients
 
@@ -84,7 +89,6 @@ class TimezoneMiddleware:
                 tzname =settings.TIME_ZONE
             request.session["django_timezone"] = tzname
             timezone.activate(zoneinfo.ZoneInfo(tzname))
-
         response = self.get_response(request)
         return response
 
